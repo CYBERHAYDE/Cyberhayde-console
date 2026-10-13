@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>CyberHayde console</title><link rel="icon" id="fav">
+<style>
+:root{--navy:#012b76;--orange:#fd8402;--paper:#f3f5fa;--card:#fff;--ink:#012b76;--mute:#5b6a86;--line:#d6dce8;--ok:#14803c;--warn:#b86e00;--bad:#b3261e;--info:#2456b8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(760px 380px at 100% -8%,#ffe8d0 0,transparent 60%),var(--paper);min-height:100vh;color:var(--ink);font:15px/1.45 Bahnschrift,"Avenir Next","Segoe UI",system-ui,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}
+header{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--navy);color:#fff;border-bottom:4px solid var(--orange)}header img{width:40px;height:40px;border-radius:50%}
+header b{font-size:19px;letter-spacing:.2px}header b em{font-style:normal;color:var(--orange)}header span{opacity:.7;font-size:13px}header button{margin-left:auto}
+main{max-width:860px;margin:0 auto;padding:18px}
+button{border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:6px;padding:8px 14px;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink)}header button.ghost{color:#fff;border-color:#fff6}
+button.bad{background:var(--bad);border-color:var(--bad)}button:disabled{opacity:.5}
+:focus-visible{outline:3px solid var(--info);outline-offset:2px}
+input,textarea,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:#fff}
+label{display:block;margin:12px 0 4px;font-weight:600;font-size:13.5px}small{color:var(--mute)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 10px 24px -18px #012b7680}.gate{max-width:420px;margin:5vh auto;text-align:center;position:relative;overflow:hidden;animation:rise .5s ease both}.gate::before{content:'';position:absolute;left:0;right:0;top:0;height:5px;background:linear-gradient(90deg,var(--navy) 0 55%,var(--orange) 55%)}.gate img{width:104px;height:104px;border-radius:50%;margin:8px auto 6px;display:block}.gate label,.gate p{text-align:left}.gate h2{color:var(--navy)}@keyframes rise{from{opacity:0;transform:translateY(12px)}}@media(prefers-reduced-motion:reduce){.gate{animation:none}}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:0}
+.client{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--card);color:var(--ink);border:1px solid var(--line);border-left:8px solid var(--mute);border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.client.active{border-left-color:var(--ok)}.client.expiring,.client.grace{border-left-color:var(--warn)}.client.expired,.client.suspended,.client.err{border-left-color:var(--bad)}
+.client h3{margin:0;font-size:17px}.badge{font-size:12.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#e6ebf2}
+.badge.active{background:#dff3e6;color:var(--ok)}.badge.expiring,.badge.grace{background:#fdecd0;color:var(--warn)}.badge.expired,.badge.suspended{background:#fbdcd9;color:var(--bad)}
+.tabs{display:flex;gap:4px;margin:14px 0;flex-wrap:wrap}.tabs button{background:transparent;color:var(--ink);border-color:var(--line)}.tabs button.on{background:var(--navy);color:#fff;box-shadow:inset 0 -3px var(--orange)}#go,#add,#sv,#save,#up{background:var(--orange);border-color:var(--orange)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 14px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;max-width:90%}
+.toast.err{background:var(--bad)}.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px}.modal img{max-width:100%;max-height:85vh;background:#fff}
+pre{white-space:pre-wrap;background:#f6f8fa;padding:10px;border-radius:6px;overflow:auto}
+</style></head><body>
+<header><img id="hdrEm" alt=""><b>Cyber<em>Hayde</em></b><span>Console</span><button class="ghost" id="lockBtn" hidden>Lock</button></header>
+<main id="app"></main>
+<script>
+const $=s=>document.querySelector(s),enc=new TextEncoder(),dec=new TextDecoder();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const EM='data:image/png;base64,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';$('#hdrEm').src=EM;$('#fav').href=EM;
+let K,SALT,clients=[],cache={},cur=null,tab='overview',idle;
+
+/* ---- Encrypted vault: the builder keys never sit in the browser as plain text ---- */
+async function derive(pass,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
+ return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
+async function seal(){const iv=crypto.getRandomValues(new Uint8Array(12));
+ const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},K,enc.encode(JSON.stringify(clients)));
+ localStorage.setItem('vault',JSON.stringify({salt:b64(SALT),iv:b64(iv),ct:b64(ct)}));}
+async function openVault(pass){const v=JSON.parse(localStorage.getItem('vault'));SALT=unb64(v.salt);K=await derive(pass,SALT);
+ clients=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},K,unb64(v.ct))));}
+async function newVault(pass){SALT=crypto.getRandomValues(new Uint8Array(16));K=await derive(pass,SALT);clients=[];await seal();}
+function bump(){clearTimeout(idle);idle=setTimeout(()=>location.reload(),5*60*1000);}
+['click','keydown','touchstart'].forEach(e=>addEventListener(e,()=>K&&bump()));
+$('#lockBtn').onclick=()=>location.reload();
+
+/* ---- Talking to a client's backend ---- */
+async function api(c,action,body={}){
+ const r=await fetch(c.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,builderKey:c.key,...body})});
+ const j=await r.json();if(!j.ok)throw new Error(j.error||'Request failed');return j.data;}
+function toast(m,bad){const t=document.createElement('div');t.className='toast'+(bad?' err':'');t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),3500);}
+async function run(fn){try{return await fn();}catch(e){toast(e.message,true);}}
+
+/* ---- Screens ---- */
+function lockScreen(){const has=!!localStorage.getItem('vault');
+ $('#app').innerHTML=`<div class="box gate"><img src="${EM}" alt="CyberHayde emblem"><h2 style="margin-top:6px">${has?'Unlock console':'Create your console passcode'}</h2>
+ <p><small>${has?'Your client keys are encrypted on this device.':'This passcode encrypts every client key on this device. There is no recovery, so choose one you will remember.'}</small></p>
+ <label for="pw">Passcode</label><input id="pw" type="password" autocomplete="current-password" ${has?'':'minlength="8"'}>
+ ${has?'':'<label for="pw2">Repeat passcode</label><input id="pw2" type="password">'}
+ <p><button id="go">${has?'Unlock':'Create and open'}</button></p></div>`;
+ $('#go').onclick=()=>run(async()=>{const p=$('#pw').value;
+  if(has){try{await openVault(p);}catch(e){throw new Error('Wrong passcode.');}}
+  else{if(p.length<8)throw new Error('Use at least 8 characters.');if(p!==$('#pw2').value)throw new Error('The two passcodes do not match.');await newVault(p);}
+  $('#lockBtn').hidden=false;bump();list();});
+ $('#pw').focus();}
+
+async function list(){cur=null;
+ $('#app').innerHTML=`<div class="row" style="margin-bottom:12px"><h2 class="grow" style="margin:0">Clients</h2><button class="ghost" id="ref">Refresh</button><button id="add">Add client</button></div><div id="cl"></div>`;
+ $('#add').onclick=addClient;$('#ref').onclick=list;
+ if(!clients.length){$('#cl').innerHTML='<div class="box">No clients yet. Add one with its web app URL and builder key from the setup log.</div>';return;}
+ $('#cl').innerHTML=clients.map((c,i)=>`<button class="client" data-i="${i}"><div class="grow"><h3>${esc(c.name)}</h3><small id="s${i}">Checking...</small></div><span class="badge" id="b${i}"></span></button>`).join('');
+ $('#cl').onclick=e=>{const b=e.target.closest('.client');if(b)detail(+b.dataset.i);};
+ clients.forEach(async(c,i)=>{try{const s=await api(c,'builder.status');cache[c.id]=s;const L=s.license;
+  $('#b'+i).textContent=L.state;$('#b'+i).className='badge '+L.state;$('#cl').children[i].className='client '+L.state;
+  $('#s'+i).textContent=(L.locked?'Locked':L.daysLeft+' days left')+(s.openPayments?`, ${s.openPayments} payment${s.openPayments>1?'s':''} to check`:'');}
+  catch(e){$('#s'+i).textContent='Cannot reach this client: '+e.message;$('#cl').children[i].className='client err';}});}
+
+function addClient(){$('#app').innerHTML=`<div class="box"><h2 style="margin-top:0">Add client</h2>
+ <label for="n">Business name</label><input id="n"><label for="u">Web app URL</label><input id="u" placeholder="https://script.google.com/macros/s/.../exec">
+ <label for="k">Builder key</label><input id="k" type="password"><p class="row"><button id="sv">Check and save</button><button class="ghost" id="cn">Cancel</button></p></div>`;
+ $('#cn').onclick=list;$('#sv').onclick=()=>run(async()=>{const c={id:crypto.randomUUID(),name:$('#n').value.trim(),url:$('#u').value.trim(),key:$('#k').value.trim()};
+  if(!c.name||!c.url||!c.key)throw new Error('Fill in all three fields.');await api(c,'builder.status');clients.push(c);await seal();toast('Client saved');list();});}
+
+async function detail(i){cur=clients[i];tab='overview';draw();}
+async function draw(){const c=cur;
+ $('#app').innerHTML=`<div class="row"><button class="ghost" id="bk">All clients</button><h2 class="grow" style="margin:0">${esc(c.name)}</h2></div>
+ <div class="tabs">${['overview','payments','subscription','app','tools'].map(t=>`<button data-t="${t}" class="${t===tab?'on':''}">${{overview:'Overview',payments:'Payments',subscription:'Subscription',app:'App settings',tools:'Tools'}[t]}</button>`).join('')}</div><div id="pane">Loading...</div>`;
+ $('#bk').onclick=list;document.querySelector('.tabs').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw();}};
+ const pane=$('#pane');await run(async()=>{const s=await api(c,'builder.status');cache[c.id]=s;const L=s.license,S=s.settings;
+ if(tab==='overview'){pane.innerHTML=`<div class="box"><div class="row"><span class="badge ${L.state}">${L.state}</span><b>${L.locked?'Locked now':L.daysLeft+' days left'}</b><small>Expiry date ${esc(L.expiry||'not set')}</small></div>
+  <p>Grace days: ${L.graceDays}. Plan: ${L.price?'N'+L.price.toLocaleString()+' per '+L.periodDays+' days':'not set up'}.</p>
+  <div class="grid"><div>Staff: <b>${s.counts.activeStaff}</b> of ${s.counts.staff}</div><div>Devices: <b>${s.counts.devices}</b></div><div>Items: <b>${s.counts.items}</b></div></div>
+  <p><small>Last sale: ${esc(s.lastSale||'none yet')}<br>Last activity: ${esc(s.lastActivity||'none yet')}</small></p>
+  <div class="row"><button id="ext">Extend days</button>${L.state==='suspended'?'<button id="rei">Reinstate</button>':'<button class="bad" id="sus">Suspend</button>'}</div></div>`;
+  $('#ext').onclick=()=>run(async()=>{const d=prompt('Extend by how many days?','30');if(!d)return;await api(c,'builder.extend',{days:+d});toast('Extended');draw();});
+  const sus=$('#sus'),rei=$('#rei');if(sus)sus.onclick=()=>run(async()=>{if(!confirm('Suspend '+c.name+'? Nobody can use the app until you reinstate.'))return;await api(c,'builder.suspend');toast('Suspended');draw();});
+  if(rei)rei.onclick=()=>run(async()=>{await api(c,'builder.reinstate');toast('Reinstated');draw();});}
+ if(tab==='payments'){const p=await api(c,'builder.payments');pane.innerHTML=p.length?`<div class="box"><table><tr><th>Submitted</th><th>Amount</th><th>Details</th><th>Status</th><th></th></tr>${p.map(x=>`<tr><td>${esc(String(x.SubmittedAt).slice(0,10))}</td><td>N${Number(x.Amount).toLocaleString()}</td><td>${esc(x.PayDate)}<br><small>${esc(x.Reference||'no reference')}</small></td><td>${esc(x.Status)}</td>
+  <td class="row"><button class="ghost" data-a="view" data-id="${x.PaymentID}">Receipt</button>${x.Status==='Confirmed'||x.Status==='Rejected'?'':`<button data-a="ok" data-id="${x.PaymentID}">Confirm</button><button class="bad" data-a="no" data-id="${x.PaymentID}">Reject</button>`}</td></tr>`).join('')}</table></div>`:'<div class="box">No payments yet.</div>';
+  pane.onclick=e=>{const b=e.target.closest('button[data-a]');if(!b)return;const id=b.dataset.id,a=b.dataset.a;run(async()=>{
+   if(a==='view'){const r=await api(c,'builder.receipt',{paymentId:id});const m=document.createElement('div');m.className='modal';m.innerHTML=`<img alt="Receipt" src="${r.dataUrl}">`;m.onclick=()=>m.remove();document.body.append(m);}
+   if(a==='ok'){await api(c,'builder.confirmPayment',{paymentId:id});toast('Confirmed');draw();}
+   if(a==='no'){const sus=confirm('Reject this payment. Press OK to also suspend the client, or Cancel to only reject.');await api(c,'builder.rejectPayment',{paymentId:id,suspend:sus});toast(sus?'Rejected and suspended':'Rejected');draw();}});};}
+ if(tab==='subscription'||tab==='app'){const F=tab==='subscription'?[['SubscriptionExpiry','Expiry date (YYYY-MM-DD)'],['PlanPrice','Plan price (naira)'],['PlanPeriodDays','Days per payment'],['GraceDays','Grace days after expiry'],['ReminderDays','Start reminding this many days before'],['PaymentBank','Bank'],['PaymentAccountName','Account name'],['PaymentAccountNumber','Account number']]
+   :[['OrgName','Business name'],['ReceiptAddress','Receipt address'],['ReceiptPhone','Receipt phone'],['ReceiptFooterNote','Receipt footer note'],['Announcement','Message shown to staff on open'],['MinAppVersion','Minimum app version'],['ForceRefreshVersion','Force refresh version']];
+  pane.innerHTML=`<div class="box"><div class="grid">${F.map(([k,l])=>`<div><label for="f_${k}">${l}</label><input id="f_${k}" value="${esc(S[k]||'')}"></div>`).join('')}</div>
+  ${tab==='app'?`<label for="f_RemoteConfigJSON">Remote config (JSON)</label><textarea id="f_RemoteConfigJSON" rows="5">${esc(S.RemoteConfigJSON||'{}')}</textarea>`:''}
+  <p class="row"><button id="save">Save changes</button>${tab==='app'?'<button class="ghost" id="bmp">Force all devices to refresh</button>':''}</p></div>`;
+  const keys=F.map(f=>f[0]).concat(tab==='app'?['RemoteConfigJSON']:[]);
+  $('#save').onclick=()=>run(async()=>{const ch={};keys.forEach(k=>ch[k]=$('#f_'+k).value.trim());await api(c,'builder.setConfig',{changes:ch});toast('Saved');draw();});
+  if(tab==='app')$('#bmp').onclick=()=>run(async()=>{await api(c,'builder.setConfig',{changes:{ForceRefreshVersion:String((+S.ForceRefreshVersion||0)+1)}});toast('Devices will refresh on next open');draw();});}
+ if(tab==='tools'){const a=await api(c,'builder.audit',{limit:30});pane.innerHTML=`<div class="box"><h3 style="margin-top:0">Owner passcode</h3><div class="row"><input id="sid" value="AD-001" style="width:120px"><button id="rst">Reset passcode</button></div><p id="out"></p>
+  <h3>Builder key</h3><p><button class="ghost" id="rot">Rotate key</button> <small>The old key stops working at once. The new one is saved here automatically.</small></p>
+  <h3>Console</h3><p><button class="ghost bad" id="rm" style="color:var(--bad)">Remove from this console</button> <small>Does not touch the client's data.</small></p></div>
+  <div class="box"><h3 style="margin-top:0">Recent activity</h3><table>${a.map(r=>`<tr><td>${esc(String(r.Timestamp).slice(0,16).replace('T',' '))}</td><td>${esc(r.StaffName)}</td><td>${esc(r.Action)}<br><small>${esc(r.Details)}</small></td></tr>`).join('')}</table></div>`;
+  $('#rst').onclick=()=>run(async()=>{if(!confirm('Reset this passcode? The old one stops working.'))return;const r=await api(c,'builder.resetOwnerPasscode',{staffId:$('#sid').value.trim()});$('#out').innerHTML='New passcode: <b>'+esc(r.passcode)+'</b> <small>Shown once. Give it to the owner in person.</small>';});
+  $('#rot').onclick=()=>run(async()=>{if(!confirm('Rotate the builder key?'))return;const r=await api(c,'builder.rotateKey');c.key=r.builderKey;await seal();toast('Key rotated and saved');});
+  $('#rm').onclick=()=>run(async()=>{if(!confirm('Remove '+c.name+' from this console?'))return;clients=clients.filter(x=>x!==c);await seal();list();});}
+ });}
+lockScreen();
+</script></body></html>
