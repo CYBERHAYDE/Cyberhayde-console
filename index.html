@@ -81,9 +81,11 @@ async function list(){cur=null;
  $('#add').onclick=addClient;$('#ref').onclick=list;
  if(!clients.length){$('#cl').innerHTML='<div class="box">No clients yet. Add one with its web app URL and builder key from the setup log.</div>';return;}
  $('#cl').innerHTML=clients.map((c,i)=>`<button class="client" data-i="${i}"><div class="grow"><h3>${esc(c.name)}</h3><small id="s${i}">Checking...</small></div><span class="badge" id="b${i}"></span><span class="rm" role="button" tabindex="0" data-rm="${i}">Remove</span></button>`).join('');
- $('#cl').onclick=e=>{const r=e.target.closest('[data-rm]');   if(r){e.stopPropagation();const i=+r.dataset.rm,c=clients[i];if(!confirm('Remove '+c.name+' from this list?
-
-This only removes it from your console. The client\'s data and app are not touched. You will need its web app URL and builder key to add it again.'))return;    clients.splice(i,1);run(async()=>{await seal();toast(c.name+' removed');list();});return;}   const b=e.target.closest('.client');if(b)detail(+b.dataset.i);};
+$('#cl').onclick=e=>{const r=e.target.closest('[data-rm]');
+  if(r){e.stopPropagation();const i=+r.dataset.rm,c=clients[i];
+   if(!confirm("Remove "+c.name+" from this list? This only removes it from your console. The client's data and app are not touched. You will need its web app URL and builder key to add it again."))return;
+   clients.splice(i,1);run(async()=>{await seal();toast(c.name+" removed");list();});return;}
+  const b=e.target.closest('.client');if(b)detail(+b.dataset.i);};
  clients.forEach(async(c,i)=>{try{const s=await api(c,'builder.status');cache[c.id]=s;const L=s.license;
   $('#b'+i).textContent=L.state;$('#b'+i).className='badge '+L.state;$('#cl').children[i].className='client '+L.state;
   $('#s'+i).textContent=(L.locked?'Locked':L.daysLeft+' days left')+(s.openPayments?`, ${s.openPayments} payment${s.openPayments>1?'s':''} to check`:'');}
