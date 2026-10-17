@@ -100,7 +100,7 @@ function addClient(){$('#app').innerHTML=`<div class="box"><h2 style="margin-top
 async function detail(i){cur=clients[i];tab='overview';draw();}
 async function draw(){const c=cur;
  $('#app').innerHTML=`<div class="row"><button class="ghost" id="bk">All clients</button><h2 class="grow" style="margin:0">${esc(c.name)}</h2></div>
- <div class="tabs">${['overview','payments','subscription','app','tools'].map(t=>`<button data-t="${t}" class="${t===tab?'on':''}">${{overview:'Overview',payments:'Payments',subscription:'Subscription',app:'App settings',tools:'Tools'}[t]}</button>`).join('')}</div><div id="pane">Loading...</div>`;
+ <div class="tabs">${['overview','payments','subscription','app','live','tools'].map(t=>`<button data-t="${t}" class="${t===tab?'on':''}">${{overview:'Overview',payments:'Payments',subscription:'Subscription',app:'App settings',tools:'Tools',live:'Live view'}[t]}</button>`).join('')}</div><div id="pane">Loading...</div>`;
  $('#bk').onclick=list;document.querySelector('.tabs').onclick=e=>{const t=e.target.dataset.t;if(t){tab=t;draw();}};
  const pane=$('#pane');await run(async()=>{const s=await api(c,'builder.status');cache[c.id]=s;const L=s.license,S=s.settings;
  if(tab==='overview'){pane.innerHTML=`<div class="box"><div class="row"><span class="badge ${L.state}">${L.state}</span><b>${L.locked?'Locked now':L.daysLeft+' days left'}</b><small>Expiry date ${esc(L.expiry||'not set')}</small></div>
@@ -125,7 +125,18 @@ async function draw(){const c=cur;
   const keys=F.map(f=>f[0]).concat(tab==='app'?['RemoteConfigJSON']:[]);
   $('#save').onclick=()=>busy('#save','Saving...',()=>run(async()=>{const ch={};keys.forEach(k=>ch[k]=$('#f_'+k).value.trim());await api(c,'builder.setConfig',{changes:ch});toast('Saved');draw();}));
   if(tab==='app')$('#bmp').onclick=()=>run(async()=>{await api(c,'builder.setConfig',{changes:{ForceRefreshVersion:String((+S.ForceRefreshVersion||0)+1)}});toast('Devices will refresh on next open');draw();});}
- if(tab==='tools'){const a=await api(c,'builder.audit',{limit:30});pane.innerHTML=`<div class="box"><h3 style="margin-top:0">Owner passcode</h3><div class="row"><input id="sid" value="AD-001" style="width:120px"><button id="rst">Reset passcode</button></div><p id="out"></p>
+   if(tab==='live'){const v=await api(c,'builder.view',{limit:60}),n=x=>'₦'+Number(x||0).toLocaleString('en-NG'),tm=x=>esc(String(x||'').replace('T',' ').slice(0,16)),
+  tbl=(h,r)=>`<table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${r.join('')||`<tr><td colspan="${h.length}"><small>Nothing yet.</small></td></tr>`}</table>`;
+  pane.innerHTML=`<div class="box"><div class="row"><b class="grow">Today ${esc(v.today.date)}: ${v.today.count} sale${v.today.count===1?'':'s'}, ${n(v.today.total)}</b><button class="ghost" id="rf">Refresh</button></div></div>
+  <div class="box"><h3 style="margin-top:0">Refused by the server (latest 40)</h3>${tbl(['When','Reason'],v.problems.map(p=>`<tr><td>${tm(p.time)}</td><td>${esc(p.message)}</td></tr>`))}</div>
+  <div class="box"><h3 style="margin-top:0">Recent sales</h3>${tbl(['Time','Receipt','Staff','Payment','Total',''],v.sales.map(s=>`<tr><td>${tm(s.time)}</td><td>${esc(s.id)}</td><td>${esc(s.staff)}</td><td>${esc(s.payment)}</td><td>${n(s.total)}</td><td>${s.voided?'refunded':s.offline?'made offline':''}</td></tr>`))}</div>
+  <div class="box"><h3 style="margin-top:0">Stock (${v.items.length} products)</h3>${tbl(['Product','Stock','Reorder at','Price','Cost','Branch'],v.items.map(i=>`<tr><td>${esc(i.name)}${i.bundle?' (bundle)':''}</td><td>${i.bundle?'-':i.stock}</td><td>${i.reorder}</td><td>${n(i.price)}</td><td>${n(i.cost)}</td><td>${esc(i.branch||'')}</td></tr>`))}</div>
+  <div class="box"><h3 style="margin-top:0">Staff</h3>${tbl(['ID','Name','Role','Status'],v.staff.map(s=>`<tr><td>${esc(s.id)}</td><td>${esc(s.name)}</td><td>${esc(s.role)}</td><td>${s.active?'active':'inactive'}</td></tr>`))}
+  <h3>Phones and computers</h3>${tbl(['Code','Added','By','Device'],v.devices.map(d=>`<tr><td>${esc(d.code)}</td><td>${tm(d.at)}</td><td>${esc(d.by)}</td><td>${esc(d.label)}</td></tr>`))}</div>
+  <div class="box"><h3 style="margin-top:0">Expenses (latest 30)</h3>${tbl(['Date','Category','Amount','By','Note'],v.expenses.map(e=>`<tr><td>${esc(e.date)}</td><td>${esc(e.category)}</td><td>${n(e.amount)}</td><td>${esc(e.by)}</td><td>${esc(e.note||'')}</td></tr>`))}</div>
+  <div class="box"><h3 style="margin-top:0">Everything that happened</h3>${tbl(['Time','Who','Action','Details'],v.audit.map(a=>`<tr><td>${tm(a.time)}</td><td>${esc(a.who)}</td><td>${esc(a.action)}</td><td>${esc(a.details||'')}</td></tr>`))}</div>`;
+  $('#rf').onclick=draw;}
+   if(tab==='tools'){const a=await api(c,'builder.audit',{limit:30});pane.innerHTML=`<div class="box"><h3 style="margin-top:0">Owner passcode</h3><div class="row"><input id="sid" value="AD-001" style="width:120px"><button id="rst">Reset passcode</button></div><p id="out"></p>
   <h3>Builder key</h3><p><button class="ghost" id="rot">Rotate key</button> <small>The old key stops working at once. The new one is saved here automatically.</small></p>
   <h3>Backup</h3><p><button class="ghost" id="bkp">Back up now</button> <small>Saves a copy of the whole Sheet in the Backups folder in your Drive.</small></p>
   <h3 style="color:var(--bad)">Danger zone</h3><p><button class="bad" id="rst2">Reset inventory data</button> <small>Erases items, stock, sales, expenses and customers on every phone. A backup copy of the Sheet is saved first.</small></p>
