@@ -31,24 +31,56 @@ pre{white-space:pre-wrap;background:#f6f8fa;padding:10px;border-radius:6px;overf
 #bar{position:fixed;top:0;left:0;right:0;height:3px;z-index:99;overflow:hidden;opacity:0;transition:opacity .2s;pointer-events:none}#bar.on{opacity:1}#bar::before{content:'';position:absolute;inset:0;width:40%;background:var(--orange);animation:bar 1s ease-in-out infinite}@keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}button[disabled]{cursor:progress}
 </style></head><body>
 <div id="bar"></div>
-<header><img id="hdrEm" alt=""><b>Cyber<em>Hayde</em></b><span>Console</span><button class="ghost" id="lockBtn" hidden>Lock</button></header>
+<header><img id="hdrEm" alt=""><b>Cyber<em>Hayde</em></b><span>Console</span><span id="syncState" style="font-size:12px;opacity:.85;margin-left:6px"></span><button class="ghost" id="lockBtn" hidden>Lock</button></header>
 <main id="app"></main>
 <script>
 const $=s=>document.querySelector(s),enc=new TextEncoder(),dec=new TextDecoder();
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const EM='data:image/png;base64,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';$('#hdrEm').src=EM;$('#fav').href=EM;
-let K,SALT,clients=[],cache={},cur=null,tab='overview',idle;
+let K,SALT,clients=[],removed={},cache={},cur=null,tab='overview',idle,AUTH='',SYNC=localStorage.getItem('sync')||'',VER=+localStorage.getItem('syncver')||0;
 
 /* ---- Encrypted vault: the builder keys never sit in the browser as plain text ---- */
 async function derive(pass,salt){const k=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveKey']);
  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
-async function seal(){const iv=crypto.getRandomValues(new Uint8Array(12));
- const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},K,enc.encode(JSON.stringify(clients)));
- localStorage.setItem('vault',JSON.stringify({salt:b64(SALT),iv:b64(iv),ct:b64(ct)}));}
-async function openVault(pass){const v=JSON.parse(localStorage.getItem('vault'));SALT=unb64(v.salt);K=await derive(pass,SALT);
- clients=JSON.parse(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},K,unb64(v.ct))));}
-async function newVault(pass){SALT=crypto.getRandomValues(new Uint8Array(16));K=await derive(pass,SALT);clients=[];await seal();}
+const pack=()=>JSON.stringify({v:2,clients,removed});
+const unpack=t=>{const o=JSON.parse(t);return Array.isArray(o)?{clients:o,removed:{}}:{clients:o.clients||[],removed:o.removed||{}};};
+async function sealText(){const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},K,enc.encode(pack()));return JSON.stringify({salt:b64(SALT),iv:b64(iv),ct:b64(ct)});}
+async function openBlob(text,pass){const v=JSON.parse(text),salt=unb64(v.salt),key=await derive(pass,salt),plain=dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},key,unb64(v.ct)));return{...unpack(plain),salt,key};}
+async function openWithK(text){const v=JSON.parse(text);return unpack(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},K,unb64(v.ct))));}
+async function openVault(pass){const o=await openBlob(localStorage.getItem('vault'),pass);SALT=o.salt;K=o.key;clients=o.clients;removed=o.removed;}
+async function newVault(pass){SALT=crypto.getRandomValues(new Uint8Array(16));K=await derive(pass,SALT);clients=[];removed={};await seal();}
+async function seal(){const blob=await sealText();localStorage.setItem('vault',blob);push(blob);}
+
+/* ---- Sync: the encrypted list is kept in your own Google account so every device shows the same clients ---- */
+async function deriveAuth(pass){const k=await crypto.subtle.importKey('raw',enc.encode(pass),'PBKDF2',false,['deriveBits']),
+ bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode('cyberhayde-console-auth-v1'),iterations:250000,hash:'SHA-256'},k,256);return[...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function syncPost(url,action,body={}){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,auth:AUTH,...body})});return r.json();}
+const syncCall=(action,body)=>syncPost(SYNC,action,body);
+function setSync(t,bad){const s=$('#syncState');if(s){s.textContent=t;s.style.color=bad?'#ffb4a8':'';}}
+function merge(a,b){const rem={...a.removed};for(const k in b.removed)rem[k]=Math.max(rem[k]||0,b.removed[k]);const m={};
+ [...a.clients,...b.clients].forEach(c=>{const o=m[c.id];if(!o||(c.upd||0)>(o.upd||0))m[c.id]=c;});
+ return{clients:Object.values(m).filter(c=>!(rem[c.id]&&rem[c.id]>=(c.upd||0))),removed:rem};}
+const sig=o=>JSON.stringify([o.clients.map(c=>c.id+':'+(c.upd||0)+':'+c.key+':'+c.url+':'+c.name).sort(),Object.entries(o.removed).sort()]);
+async function adopt(m,ver){clients=m.clients;removed=m.removed;VER=ver;localStorage.setItem('syncver',ver);localStorage.setItem('vault',await sealText());}
+async function push(blob,retry=0){if(!SYNC||!AUTH)return;setSync('Syncing...');
+ try{const j=await syncCall('put',{blob:blob||localStorage.getItem('vault'),expected:VER});
+  if(j.ok){VER=j.data.version;localStorage.setItem('syncver',VER);setSync('Synced');}
+  else if(j.code==='CONFLICT'&&retry<2){await adopt(merge({clients,removed},await openWithK(j.data.blob)),j.data.version);await push(null,retry+1);}
+  else setSync(j.error||'Sync problem',true);}
+ catch(e){setSync('Saved on this device only. Will sync later.',true);}}
+async function pull(){if(!SYNC||!AUTH)return;setSync('Syncing...');
+ try{const j=await syncCall('get');if(!j.ok){setSync(j.error||'Sync problem',true);return;}
+  if(j.data.version===VER){setSync('Synced');return;}
+  const remote=await openWithK(j.data.blob),m=merge({clients,removed},remote);await adopt(m,j.data.version);
+  if(sig(m)!==sig(remote))await push();else setSync('Synced');}
+ catch(e){setSync("Offline. Using this device's copy.",true);}}
+async function syncMenu(){if(SYNC){await pull();await push();toast('Sync checked');list();return;}
+ const u=(prompt('Paste your Console Sync address (it starts with https://script.google.com):')||'').trim();if(!u)return;
+ await run(async()=>{const st=await syncPost(u,'status');if(!st.ok)throw new Error(st.error||'That address did not answer.');
+  if(st.data.initialised)throw new Error("That sync service already holds a console. On this device, clear this site's data and use Connect to my existing console instead.");
+  SYNC=u;const j=await syncCall('init',{blob:await sealText()});if(!j.ok){SYNC='';throw new Error(j.error||'Could not set up sync.');}
+  VER=j.data.version;localStorage.setItem('sync',SYNC);localStorage.setItem('syncver',VER);setSync('Synced');toast('Sync is on. Your other devices can now connect.');list();});}
 function bump(){clearTimeout(idle);idle=setTimeout(()=>location.reload(),5*60*1000);}
 ['click','keydown','touchstart'].forEach(e=>addEventListener(e,()=>K&&bump()));
 $('#lockBtn').onclick=()=>location.reload();
@@ -64,27 +96,36 @@ function toast(m,bad){const t=document.createElement('div');t.className='toast'+
 async function run(fn){try{return await fn();}catch(e){toast(e.message,true);}}
 
 /* ---- Screens ---- */
-function lockScreen(){const has=!!localStorage.getItem('vault');
- $('#app').innerHTML=`<div class="box gate"><img src="${EM}" alt="CyberHayde emblem"><h2 style="margin-top:6px">${has?'Unlock console':'Create your console passcode'}</h2>
- <p><small>${has?'Your client keys are encrypted on this device.':'This passcode encrypts every client key on this device. There is no recovery, so choose one you will remember.'}</small></p>
- <label for="pw">Passcode</label><input id="pw" type="password" autocomplete="current-password" ${has?'':'minlength="8"'}>
- ${has?'':'<label for="pw2">Repeat passcode</label><input id="pw2" type="password">'}
- <p><button id="go">${has?'Unlock':'Create and open'}</button></p></div>`;
- $('#go').onclick=()=>busy('#go',has?'Unlocking...':'Creating...',()=>run(async()=>{const p=$('#pw').value;
-  if(has){try{await openVault(p);}catch(e){throw new Error('Wrong passcode.');}}
-  else{if(p.length<8)throw new Error('Use at least 8 characters.');if(p!==$('#pw2').value)throw new Error('The two passcodes do not match.');await newVault(p);}
-  $('#lockBtn').hidden=false;bump();list();}));
+function lockScreen(mode){const has=!!localStorage.getItem('vault');mode=has?'unlock':(mode||'create');
+ const head={unlock:'Unlock console',create:'Create your console passcode',connect:'Connect to your console'}[mode],
+ note={unlock:'Your client keys are encrypted on this device.',create:'This passcode encrypts every client key. Use a long one (10 or more characters). There is no recovery.',connect:'Paste your sync address and enter your console passcode. This device will then show all your clients.'}[mode];
+ $('#app').innerHTML=`<div class="box gate"><img src="${EM}" alt="CyberHayde emblem"><h2 style="margin-top:6px">${head}</h2><p><small>${note}</small></p>
+ ${mode==='connect'?'<label for="su">Sync address</label><input id="su" placeholder="https://script.google.com/macros/s/.../exec">':''}
+ <label for="pw">Passcode</label><input id="pw" type="password" autocomplete="current-password">
+ ${mode==='create'?'<label for="pw2">Repeat passcode</label><input id="pw2" type="password"><label for="su">Sync address (recommended, so every device shows your clients)</label><input id="su" placeholder="https://script.google.com/macros/s/.../exec">':''}
+ <p><button id="go">${mode==='unlock'?'Unlock':mode==='create'?'Create and open':'Connect'}</button></p>
+ ${has?'':`<p style="text-align:center"><small>${mode==='create'?'Already have a console on another device? <a href="#" id="sw">Connect to it</a>':'Starting fresh? <a href="#" id="sw">Create a new console</a>'}</small></p>`}</div>`;
+ const sw=$('#sw');if(sw)sw.onclick=e=>{e.preventDefault();lockScreen(mode==='create'?'connect':'create');};
+ $('#go').onclick=()=>busy('#go',mode==='unlock'?'Unlocking...':mode==='create'?'Creating...':'Connecting...',()=>run(async()=>{const p=$('#pw').value,su=($('#su')||{value:''}).value.trim();
+  if(mode==='unlock'){try{await openVault(p);}catch(e){throw new Error('Wrong passcode.');}AUTH=SYNC?await deriveAuth(p):'';}
+  else if(mode==='create'){if(p.length<10)throw new Error('Use at least 10 characters.');if(p!==$('#pw2').value)throw new Error('The two passcodes do not match.');await newVault(p);
+   if(su)try{const st=await syncPost(su,'status');if(!st.ok)throw new Error('The sync address did not answer.');if(st.data.initialised)throw new Error('That sync service already holds a console. Use "Connect to it" instead.');
+    SYNC=su;AUTH=await deriveAuth(p);const j=await syncCall('init',{blob:await sealText()});if(!j.ok)throw new Error(j.error||'Could not set up sync.');VER=j.data.version;localStorage.setItem('sync',SYNC);localStorage.setItem('syncver',VER);}
+   catch(e){SYNC='';localStorage.removeItem('vault');throw e;}}
+  else{if(!su)throw new Error('Paste the sync address.');SYNC=su;AUTH=await deriveAuth(p);const j=await syncCall('get');if(!j.ok){SYNC=localStorage.getItem('sync')||'';throw new Error(j.error||'Could not connect.');}
+   let o;try{o=await openBlob(j.data.blob,p);}catch(e){SYNC='';throw new Error('Wrong passcode.');}SALT=o.salt;K=o.key;clients=o.clients;removed=o.removed;VER=j.data.version;localStorage.setItem('vault',j.data.blob);localStorage.setItem('sync',SYNC);localStorage.setItem('syncver',VER);}
+  $('#lockBtn').hidden=false;bump();list();if(mode==='unlock'&&SYNC)pull().then(()=>{if($('#cl'))list();});else setSync(SYNC?'Synced':'');}));
  $('#pw').focus();}
 
 async function list(){cur=null;
- $('#app').innerHTML=`<div class="row" style="margin-bottom:12px"><h2 class="grow" style="margin:0">Clients</h2><button class="ghost" id="ref">Refresh</button><button id="add">Add client</button></div><div id="cl"></div>`;
- $('#add').onclick=addClient;$('#ref').onclick=list;
+ $('#app').innerHTML=`<div class="row" style="margin-bottom:12px"><h2 class="grow" style="margin:0">Clients</h2><button class="ghost" id="syn">${SYNC?'Sync now':'Turn on sync'}</button><button class="ghost" id="ref">Refresh</button><button id="add">Add client</button></div><div id="cl"></div>`;
+ $('#add').onclick=addClient;$('#ref').onclick=async()=>{await pull();list();};$('#syn').onclick=syncMenu;
  if(!clients.length){$('#cl').innerHTML='<div class="box">No clients yet. Add one with its web app URL and builder key from the setup log.</div>';return;}
  $('#cl').innerHTML=clients.map((c,i)=>`<button class="client" data-i="${i}"><div class="grow"><h3>${esc(c.name)}</h3><small id="s${i}">Checking...</small></div><span class="badge" id="b${i}"></span><span class="rm" role="button" tabindex="0" data-rm="${i}">Remove</span></button>`).join('');
 $('#cl').onclick=e=>{const r=e.target.closest('[data-rm]');
   if(r){e.stopPropagation();const i=+r.dataset.rm,c=clients[i];
    if(!confirm("Remove "+c.name+" from this list? This only removes it from your console. The client's data and app are not touched. You will need its web app URL and builder key to add it again."))return;
-   clients.splice(i,1);run(async()=>{await seal();toast(c.name+" removed");list();});return;}
+   removed[c.id]=Date.now();clients.splice(i,1);run(async()=>{await seal();toast(c.name+" removed");list();});return;}
   const b=e.target.closest('.client');if(b)detail(+b.dataset.i);};
  clients.forEach(async(c,i)=>{try{const s=await api(c,'builder.status');cache[c.id]=s;const L=s.license;
   $('#b'+i).textContent=L.state;$('#b'+i).className='badge '+L.state;$('#cl').children[i].className='client '+L.state;
@@ -94,7 +135,7 @@ $('#cl').onclick=e=>{const r=e.target.closest('[data-rm]');
 function addClient(){$('#app').innerHTML=`<div class="box"><h2 style="margin-top:0">Add client</h2>
  <label for="n">Business name</label><input id="n"><label for="u">Web app URL</label><input id="u" placeholder="https://script.google.com/macros/s/.../exec">
  <label for="k">Builder key</label><input id="k" type="password"><p class="row"><button id="sv">Check and save</button><button class="ghost" id="cn">Cancel</button></p></div>`;
- $('#cn').onclick=list;$('#sv').onclick=()=>busy('#sv','Checking...',()=>run(async()=>{const c={id:crypto.randomUUID(),name:$('#n').value.trim(),url:$('#u').value.trim(),key:$('#k').value.trim()};
+ $('#cn').onclick=list;$('#sv').onclick=()=>busy('#sv','Checking...',()=>run(async()=>{const c={id:crypto.randomUUID(),name:$('#n').value.trim(),url:$('#u').value.trim(),key:$('#k').value.trim(),upd:Date.now()};
   if(!c.name||!c.url||!c.key)throw new Error('Fill in all three fields.');await api(c,'builder.status');clients.push(c);await seal();toast('Client saved');list();}));}
 
 async function detail(i){cur=clients[i];tab='overview';draw();}
@@ -143,10 +184,10 @@ async function draw(){const c=cur;
   <h3>Console</h3><p><button class="ghost bad" id="rm" style="color:var(--bad)">Remove from this console</button> <small>Does not touch the client's data.</small></p></div>
   <div class="box"><h3 style="margin-top:0">Recent activity</h3><table>${a.map(r=>`<tr><td>${esc(String(r.Timestamp).slice(0,16).replace('T',' '))}</td><td>${esc(r.StaffName)}</td><td>${esc(r.Action)}<br><small>${esc(r.Details)}</small></td></tr>`).join('')}</table></div>`;
   $('#rst').onclick=()=>run(async()=>{if(!confirm('Reset this passcode? The old one stops working.'))return;const r=await api(c,'builder.resetOwnerPasscode',{staffId:$('#sid').value.trim()});$('#out').innerHTML='New passcode: <b>'+esc(r.passcode)+'</b> <small>Shown once. Give it to the owner in person.</small>';});
-  $('#rot').onclick=()=>run(async()=>{if(!confirm('Rotate the builder key?'))return;const r=await api(c,'builder.rotateKey');c.key=r.builderKey;await seal();toast('Key rotated and saved');});
+  $('#rot').onclick=()=>run(async()=>{if(!confirm('Rotate the builder key?'))return;const r=await api(c,'builder.rotateKey');c.key=r.builderKey;c.upd=Date.now();await seal();toast('Key rotated and saved');});
   $('#bkp').onclick=()=>run(async()=>{await api(c,'builder.backupNow');toast('Backup saved to your Drive');draw();});
   $('#rst2').onclick=()=>run(async()=>{if(prompt('This erases ALL inventory data for '+c.name+' on every phone.\nType the business name to continue:')!==c.name)return toast('Reset cancelled. Nothing was erased.');if(prompt('Type RESET to confirm.')!=='RESET')return toast('Reset cancelled. Nothing was erased.');await api(c,'builder.resetData',{confirm:'RESET'});toast('All inventory data erased. A backup copy was saved.');draw();});
-  $('#rm').onclick=()=>run(async()=>{if(!confirm('Remove '+c.name+' from this console?'))return;clients=clients.filter(x=>x!==c);await seal();list();});}
+  $('#rm').onclick=()=>run(async()=>{if(!confirm('Remove '+c.name+' from this console?'))return;removed[c.id]=Date.now();clients=clients.filter(x=>x!==c);await seal();list();});}
  });}
 lockScreen();
 </script></body></html>
