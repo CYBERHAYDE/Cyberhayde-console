@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#012b76">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <title>CyberHayde console</title><link rel="icon" id="fav">
 <style>
 :root{--navy:#012b76;--orange:#fd8402;--paper:#f3f5fa;--card:#fff;--ink:#012b76;--mute:#5b6a86;--line:#d6dce8;--ok:#14803c;--warn:#b86e00;--bad:#b3261e;--info:#2456b8;--r:12px}
@@ -103,6 +104,13 @@ pre{white-space:pre-wrap;background:#f6f8fa;padding:10px;border-radius:6px;overf
 }
 @media(max-width:520px){#syncState:not(.bad){display:none}}
 @media(max-height:520px){.gate{margin-top:8px}.gate .em{width:56px;height:56px}}
+
+.rk{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font:700 clamp(17px,5vw,22px)/1.4 ui-monospace,Consolas,Menlo,monospace;letter-spacing:.08em;background:#fff8ec;border:2px dashed var(--orange);border-radius:10px;padding:14px 10px;margin:12px 0;user-select:all}
+.rk span{white-space:nowrap}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin:14px 0 0}.chk input{width:20px;min-height:20px;height:20px;margin:2px 0 0;flex:0 0 20px}
+.ver{text-align:center;margin:10px 0 0;opacity:.7}
+.sheet h4{margin:18px 0 6px}
+@media print{header,.actions,.alt,.ver,.hint,h2,.em,.chk,.err,#toasts{display:none!important}.gate{box-shadow:none;border:0}.rk{border-color:#000}}
 </style></head><body>
 <div id="bar"></div>
 <header><img id="hdrEm" alt=""><b>Cyber<em>Hayde</em></b><span class="sub">Console</span><span class="sp"></span><span id="syncState"></span><button id="acctBtn" hidden>Account</button><button id="lockBtn" hidden>Sign out</button></header>
@@ -118,51 +126,90 @@ const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))),unb64=s=>Uint8Array
 const EM='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAwFBMVEXk39uTmqgeHh5ac6OgrsoFBQVgYGABAQH39/d0ibENDQ27xdj9pk319fXw8PBlZWUbPYH90qCsrKz6ly0eQYIMG2KkpKRkZGRlZWWkpKTRdhg4QF1/v3+tZSX+wH/9/f0AAAABKXT9hQQAG2v9ewD+/v4RNHn9lyvo6e3R1+UpSYf91q04VpH9yJBJZJr9uHIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADd1i07AAAAMHRSTlP0++L//5v3UJ3/Iv//Uh0G//8L////lqZNS///BP///gD/////A////v////////80MP99AAAJb0lEQVR42sVbi5qiOBMtJGAj9mhr98zs/hdAEAFB3v/ttpJwSexAQtTZ7H492mjXyamTSlURIF4wzucz//fH+/vbG0DUDYC3t/f3H2fpQ4YDllr/gaajiYEwfizFAMbmuXGINAM4CGMIYGwerUeGg2EwhACm5vVzl3kwhQBG5s0nL9JgBAFMzENkNcAEArzM/ADhAQDM99FD4+0QxwdLADj9R80zCPMkwNz0H2Ff8MNfcbxbDuA50+fjZxz/dykAtA/R0wbsJt0AU+5/j5454PcUAphw/xL6CxwmbjAGYO7+kgS3ap/jcMEAwc4MwDk+G7mfuFWSpmnCRlppP+8oEYCl/dDdJ51tNvKU2CEAK/mTSrLOKHD1qJ3NdwRgMX9S3Vs3BEA50AAwsF/eFOYRgBNZIYD7vE9n30mU9pPELG759/EA7uKPZv0V7p35tBsJMQwav+42RxmAzn64TyXjyb6+uXQEpXHU8mQhgmRfE3+JNPfkRkqbqLyON2oAuAA17hemn+6HSUPTXJcgcDZqBrQCFOynuTNE//aUZdllydYpCXEEcNAIgAj2byP3TXbCkZ2WbF6e4AQwdYDof1HxJz6y1tIJMDhgPgKXQtgPhd9fOwCnS2TnBDBcgdVoX5L+NbMBAONahIGA2W+M8Ue2bwkg8jfnOwDzBISjAO+WviUA1OFBBKALQYMDvu36lgAiZy0xoAkBwwpMg+hJAKJVVzWCCQF5T8D3vMsaQE9BBwDMQiA8D0C04ksRFihAlfTYA+goAP0SGGNw+UwA3b4M+iDcp2DKrM8uEnaxIO4BzBJQ5HNJlz0DNBwyALgNm+2Cterqhz0DXIaglWAfhVnaW5JQEEIREtf/zxctzfKvunYDAsVQNtH3oV6GoN2GPnsPFEXAqqGKJSOAJvIkTeX8NMlrFxM1rBxSnrWBzgeAlUBksg+nNcmHOpCQmtvOpRQ571LVir/JaeoEsz5gAN7NJJDL+TD/BWeAuoBTwN4MhLBrM5W7v2YA5j0QSIl4XlcCCOTb+d/ff2e4ErJjGRKHeaVjyQ1uupKN+gB0qahUiQTFUJrlLlPc/SooQodBZGbL/UT4EtYB6HJxoRLs98Ja2JYUcYBevo0C+r6DSrEIdMVILWisT08E134HwIyGAvzb7EIEXTVWC8m4GBvLKQAg0h6kuTqAdQA8PYAxGx2mIppQMzAAcBGAO7shgUYCIoCedoJ/dT+pAcrP4Pe9pnOx0gMQNNDNpcwFd3yoRZhwEbiqNFJWIegaklI/pCZQOvvRQF+ZSQB46AqgJGwJf85uyWstALkjkbL/BVoVDER1On5yngBcBqBrSQ6R0BVgjMJWASiENoamdeR4WgBk2I3DbjNKRV2rAERF3X9J17kBD7RNsWTMR4iLu07lirH1Q50REabEvatrocBK31j4lFLS+7b0x1RKVkBo0MApDABIGdFTUzIWCAzasr2ilOvpI3s5gCErVi6oPwBgjAQqCpoHAfgmnflksjZ+nAETAFE9U5z+EQBjf2Rf/BsaEDaktP53AJTfs6LnATBCMObm9wgeBICR0OwG3ajDtFL2CTM7AOAZAgChLsrFgAR9q3ZrC8DwFm0oZiVCrzq6cAqyqxUAZ20KQGyW4zYfwNgiyZb2qmUAh8gCARaJw71a2KICm8gyDm1gUxgjkO9WJZVLSv7lIrIdK31hMomA18dVTUdVOXar0FsEICqriXuGhjdOVfU5xH8t+YabTI7SSoMIYLfIg2SKhNSx0iDtkCw8K+Lk6nvHgZUGzwjg51LlOFWaPoUB1qI5xL+Xf5Pc8m/3sC00wJpUtFNms4BIwNqErDmI/1l6gDcqf1pGkaIkTuDebhgIXGK3CCmAXfzbPpI9NPx13y3X6qcM4QUAumZ1fIh/yQpzyD2hVTrd8AS+EcNcbnXdbkHVoervGW2Eq86eHUwgd32aSQBtxlKBaza3IzeZIl8YblggEb+k7I+uclnVtzSPNABmU4LmdLoqJcgB7OI1CJv+jRCXVYIl223LskQA+9Jx3bC7FcBflYCLsWwkANfmCqM/2E9oGsDMkX6oaRuQJTjctvPHDlfQEREAj25VWlEG9nTFB6z7QZd+QDdnt0rdRnABXLIsO7U0T7swck7AzjectjRla07d1a41we9fMwADBTA0gcMC08AOQE0rk3RfMVrwZR1U+Aqoo74QwOnYti2aaCLMzo4X+mIAQIvXjELIACgQdlUkYLh37HcAhH09FBjA2RZ0znXJu4WIiqapNyekFuigf7ndXvnsRwYwZ0UP0KR1m53Qo9suf4fVeSedH+AUgFh4hJILClYdfAbIUV1hFM5Jzj7bZsIZimvTthKAhksDUV4RyvaIFJxAJGC8ff+ra0bw9Va6DkgAPrvOb5eR5HlO+OX/Z4zUa8aYz3iRdBQA8Kun5siuHY8MAI8B0gmKjdOVoTWw3OvLLRkdIZXFjfXbyjypCFcpMIkEUhxoWqZ1SvKRHWrBOV95xUI/xFnpbqut7g8wYDj0iq4MzV03Z51p/HmjL5kGkoDeMwsiSn5J8oqUnAFulS7DhnmZ1gmAv7y0yPYJ8HfbBhP3DNANLTQ8g/c91Skan2e+dG/FHyELCulXkqMLah6e0ooqkb5I07BMewZ6F+CKPF2oJrcREyYCwNKNv0KaLkyslC9Y7XaKk1TcCSWbPu8wErdywxqXoVvdSJXnLiUppArEsgR4Lt5cLoyBC06tRZMtbI8YEbb4nsUBWrds8UNAP4ovgTlAdZBpE3tdmCpLqUnWdyWKMQ+Y3pnEN3zhKbZhb+osmX/31/ZVffu0SjeRABp0lDW7szpMHefbyAjIF8u4Kot8pQtOV2V7eDN9onItpSYlOypoVXQ17Xa7bZUZwmo9faARZeC8PA/z5s6U7gYh/in730/Vrl6KwF/ttCerVy/MkR1ZgBNny1+HQGFfBWDzKi/4Cvvq5wteg0Bpf+IJi5Xzp+xPPWPy9HgAK2+36CEXz3+y/LxlT9lgnvxMIfh38dfoQafN04QAK7X7tc+aeX7xJPoPlg+7rZ9AAszQb/C8oec/poTCn1K/6QOPm4cgIPubhx/5XK9sITirefaNH3q1glAYmTcCgDXM2vOdpdLzTMwbPnd8plowpwFw8lrfL3zymip5jRicwsj6OjYe5s+exz2GaRDg+MusLwZA1+XaQxQIA8bTHAWAw2x7683Sv7cYQIeCwhAGml5um41/AIt6oWa/mOIQAAAAAElFTkSuQmCC';
 $('#hdrEm').src=EM;$('#fav').href=EM;
 
-let K,SALT,clients=[],removed={},cache={},cur=null,tab='overview',idle,AUTH='',VER=+localStorage.getItem('syncver')||0,USER='',signedIn=false;
+const BUILD='2026-11-06.1';   // change this text whenever you edit this file: every open console then updates itself within a minute
+let K=null,WR={pw:null,rec:null},clients=[],removed={},cache={},cur=null,tab='overview',idle,AUTH='',VER=+localStorage.getItem('syncver')||0,USER='',signedIn=false,lastSave=0;
 const hashParam=new URLSearchParams(location.hash.slice(1)).get('s');
 if(hashParam){localStorage.setItem('sync',hashParam.trim());history.replaceState(null,'',location.pathname+location.search);}
 const SYNC=(SYNC_URL||localStorage.getItem('sync')||'').trim();
 
-/* ---- Keys: your username and password together make both the lock on your data and your proof of identity ---- */
+/* ---- Keys. Your data is locked with a random data key. That key is locked twice: once by your username + password,
+        and once by your recovery key. So either one can open it, and changing the password never touches the data. ---- */
 const secretOf=(u,p)=>String(u).trim().toLowerCase()+'\u0000'+p;
-async function aesKey(secret,salt){const k=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveKey']);
+async function kdf(secret,salt){const k=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveKey']);
  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},k,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);}
-async function authOf(secret,legacy){const k=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveBits']),
- bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(legacy?'cyberhayde-console-auth-v1':'cyberhayde-console-auth-v2'),iterations:250000,hash:'SHA-256'},k,256);
- return[...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');}
-const pack=()=>JSON.stringify({v:3,clients,removed});
+async function bitsHex(secret,label){const k=await crypto.subtle.importKey('raw',enc.encode(secret),'PBKDF2',false,['deriveBits']),
+ bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(label),iterations:250000,hash:'SHA-256'},k,256);return[...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+const authPw=s=>bitsHex(s,'cyberhayde-console-auth-v2'),authRec=k=>bitsHex(k,'cyberhayde-console-recovery-v1'),authLegacy=p=>bitsHex(p,'cyberhayde-console-auth-v1');
+async function aesEnc(key,bytes){const iv=crypto.getRandomValues(new Uint8Array(12));return{iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,bytes))};}
+const aesDec=async(key,o)=>new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(o.iv)},key,unb64(o.ct)));
+async function wrapDK(raw,secret){const salt=crypto.getRandomValues(new Uint8Array(16));return{salt:b64(salt),...await aesEnc(await kdf(secret,salt),raw)};}
+const unwrapDK=async(w,secret)=>aesDec(await kdf(secret,unb64(w.salt)),w);
+const dkKey=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+const RK_ALPHA='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const newRK=()=>[...crypto.getRandomValues(new Uint8Array(24))].map(x=>RK_ALPHA[x%32]).join('');
+const fmtRK=k=>k.match(/.{4}/g).join('-'),rkHtml=k=>k.match(/.{4}/g).map(g=>`<span>${g}</span>`).join(''),normRK=s=>String(s).toUpperCase().replace(/[^A-Z0-9]/g,'');
+const pack=()=>JSON.stringify({v:4,clients,removed});
 const unpack=t=>{const o=JSON.parse(t);return Array.isArray(o)?{clients:o,removed:{}}:{clients:o.clients||[],removed:o.removed||{}};};
-async function sealText(){const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},K,enc.encode(pack()));return JSON.stringify({v:3,salt:b64(SALT),iv:b64(iv),ct:b64(ct)});}
-async function openBlob(text,secret){const v=JSON.parse(text),salt=unb64(v.salt),key=await aesKey(secret,salt),plain=dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},key,unb64(v.ct)));return{...unpack(plain),salt,key};}
-async function openWithK(text){const v=JSON.parse(text);return unpack(dec.decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(v.iv)},K,unb64(v.ct))));}
+async function sealText(){return JSON.stringify({v:4,pw:WR.pw,rec:WR.rec,d:await aesEnc(K,enc.encode(pack()))});}
+const readV4=async(text,key)=>unpack(dec.decode(await aesDec(key,JSON.parse(text).d)));
+async function openV4(text,secret){const v=JSON.parse(text);K=await dkKey(await unwrapDK(v.pw,secret));WR={pw:v.pw,rec:v.rec||null};return readV4(text,K);}
+async function openLegacy(text,secret){const v=JSON.parse(text);return unpack(dec.decode(await aesDec(await kdf(secret,unb64(v.salt)),v)));}   // old v2 / v3 consoles
+const isV4=t=>{try{return JSON.parse(t).v===4;}catch(e){return false;}};
 async function seal(){const blob=await sealText();localStorage.setItem('vault',blob);push(blob);}
+
+/* ---- Staying signed in through a page refresh or an automatic update (never longer than 10 minutes idle) ---- */
+const IDB={db:()=>new Promise((res,rej)=>{const r=indexedDB.open('chconsole',1);r.onupgradeneeded=()=>r.result.createObjectStore('s');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}),
+ async get(k){try{const d=await IDB.db();return await new Promise(res=>{const q=d.transaction('s').objectStore('s').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null);});}catch(e){return null;}},
+ async set(k,v){try{const d=await IDB.db();await new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').put(v,k);t.oncomplete=res;t.onerror=res;t.onabort=res;});}catch(e){}},
+ async del(k){try{const d=await IDB.db();await new Promise(res=>{const t=d.transaction('s','readwrite');t.objectStore('s').delete(k);t.oncomplete=res;t.onerror=res;t.onabort=res;});}catch(e){}}};
+const saveSession=()=>signedIn?IDB.set('sess',{K,AUTH,USER,last:Date.now()}):Promise.resolve();
+async function restoreSession(){const s=await IDB.get('sess');
+ if(!s||!SYNC||Date.now()-s.last>10*60*1000){if(s)await IDB.del('sess');return false;}
+ const blob=localStorage.getItem('vault');if(!blob||!isV4(blob)){await IDB.del('sess');return false;}
+ try{K=s.K;AUTH=s.AUTH;USER=s.USER;const o=await readV4(blob,K),v=JSON.parse(blob);WR={pw:v.pw,rec:v.rec||null};clients=o.clients;removed=o.removed;VER=+localStorage.getItem('syncver')||0;
+  enter();pull().then(()=>{if($('#cl'))list();});return true;}catch(e){await IDB.del('sess');return false;}}
+async function lock(){signedIn=false;await IDB.del('sess');location.reload();}
 
 /* ---- Sync: the encrypted list lives in your own Google account, so every device shows the same clients ---- */
 async function rpc(action,body={},url){const r=await fetch(url||SYNC,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,auth:AUTH,...body})});
- const j=await r.json();if(!j.ok&&!(j.code==='CONFLICT')){const e=new Error(j.error||'Request failed');e.code=j.code;throw e;}return j;}
+ const j=await r.json();if(!j.ok&&j.code!=='CONFLICT'){const e=new Error(j.error||'Request failed');e.code=j.code;throw e;}return j;}
 function setSync(t,bad){const s=$('#syncState');if(s){s.textContent=t;s.classList.toggle('bad',!!bad);}}
 function merge(a,b){const rem={...a.removed};for(const k in b.removed)rem[k]=Math.max(rem[k]||0,b.removed[k]);const m={};
  [...a.clients,...b.clients].forEach(c=>{const o=m[c.id];if(!o||(c.upd||0)>(o.upd||0))m[c.id]=c;});
  return{clients:Object.values(m).filter(c=>!(rem[c.id]&&rem[c.id]>=(c.upd||0))),removed:rem};}
 const sig=o=>JSON.stringify([o.clients.map(c=>c.id+':'+(c.upd||0)+':'+c.key+':'+c.url+':'+c.name).sort(),Object.entries(o.removed).sort()]);
 async function adopt(m,ver){clients=m.clients;removed=m.removed;VER=ver;localStorage.setItem('syncver',ver);localStorage.setItem('vault',await sealText());}
+function resign(msg){if(!signedIn)return;toast(msg,true);signedIn=false;setTimeout(lock,1600);}
+const stale=e=>e.code==='BAD_LOGIN'?'Your login was changed on another device. Please sign in again.':(e.name==='OperationError'?'This console was updated on another device. Please sign in again.':'');
 async function push(blob,retry=0){if(!AUTH||!signedIn)return;setSync('Syncing...');
  try{const j=await rpc('put',{blob:blob||localStorage.getItem('vault'),expected:VER});
   if(j.ok){VER=j.data.version;localStorage.setItem('syncver',VER);setSync('Synced');}
-  else if(j.code==='CONFLICT'&&retry<2){await adopt(merge({clients,removed},await openWithK(j.data.blob)),j.data.version);await push(null,retry+1);}}
- catch(e){setSync(e.code?e.message:'Saved on this device. Will sync when online.',true);}}
+  else if(j.code==='CONFLICT'&&retry<2){await adopt(merge({clients,removed},await readV4(j.data.blob,K)),j.data.version);await push(null,retry+1);}}
+ catch(e){const m=stale(e);if(m)return resign(m);setSync(e.code?e.message:'Saved on this device. Will sync when online.',true);}}
 async function pull(){if(!AUTH||!signedIn)return;setSync('Syncing...');
  try{const j=await rpc('get');
   if(j.data.version===VER){setSync('Synced');return;}
-  const remote=await openWithK(j.data.blob),m=merge({clients,removed},remote);await adopt(m,j.data.version);
+  const remote=await readV4(j.data.blob,K),m=merge({clients,removed},remote);await adopt(m,j.data.version);
   if(sig(m)!==sig(remote))await push();else setSync('Synced');}
- catch(e){setSync("Offline. Using this device's copy.",true);}}
+ catch(e){const m=stale(e);if(m)return resign(m);setSync("Offline. Using this device's copy.",true);}}
 function bump(){clearTimeout(idle);idle=setTimeout(lock,10*60*1000);}
-['click','keydown','touchstart'].forEach(e=>addEventListener(e,()=>signedIn&&bump()));
-function lock(){location.reload();}
+['click','keydown','touchstart'].forEach(e=>addEventListener(e,()=>{if(!signedIn)return;bump();const n=Date.now();if(n-lastSave>15000){lastSave=n;saveSession();}}));
 $('#lockBtn').onclick=lock;
 $('#acctBtn').onclick=()=>accountSheet();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&signedIn)pull().then(()=>{if($('#cl'))list();});});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;checkUpdate();if(signedIn)pull().then(()=>{if($('#cl'))list();});});
+
+/* ---- Updates reach every device by themselves: the page asks the host for the newest copy and reloads when it differs ---- */
+let updating=false;
+async function checkUpdate(manual){if(updating||location.protocol==='file:')return false;
+ try{const r=await fetch(location.pathname+'?cb='+Date.now(),{cache:'no-store'});if(!r.ok)throw 0;const m=/const BUILD='([^']+)'/.exec(await r.text());
+  if(m&&m[1]!==BUILD){
+   const dirty=document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)&&document.activeElement.value&&signedIn;
+   if(dirty&&!manual){toast('A new version is ready. It will load when you finish typing.');return true;}
+   const n=+sessionStorage.getItem('upd')||0;if(n>=3&&!manual){return true;}sessionStorage.setItem('upd',n+1);
+   updating=true;toast('Updating to the newest version...');await saveSession();setTimeout(()=>location.replace(location.pathname+'?v='+encodeURIComponent(m[1])),500);return true;}
+  sessionStorage.removeItem('upd');if(manual)toast('You already have the newest version.');return false;}
+ catch(e){if(manual)toast('Could not check for updates right now.',true);return false;}}
+setInterval(()=>{if(!document.hidden)checkUpdate();},60*1000);
 
 /* ---- Talking to a client's backend ---- */
 let pend=0;
@@ -175,64 +222,109 @@ function toast(m,bad){let h=$('#toasts');if(!h){h=document.createElement('div');
 async function run(fn){try{return await fn();}catch(e){toast(e.message,true);}}
 const T=(h,rows)=>`<div class="tw"><table class="rt"><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map((c,i)=>`<td data-l="${esc(h[i]||'')}"><span class="v">${c}</span></td>`).join('')}</tr>`).join(''):`<tr><td colspan="${h.length}"><small>Nothing yet.</small></td></tr>`}</tbody></table></div>`;
 
-/* ---- Sign in, create account, upgrade ---- */
-function shell(title,note,body,alt){$('#app').innerHTML=`<div class="box gate"><img class="em" src="${EM}" alt="CyberHayde emblem"><h2>${title}</h2><p class="hint"><small>${note}</small></p><form id="f" autocomplete="on">${body}<p class="err" id="err" role="alert"></p></form>${alt?`<p class="alt"><small>${alt}</small></p>`:''}</div>`;}
+/* ---- Sign in, create account, forgot password, upgrade ---- */
+function shell(title,note,body,alt){$('#app').innerHTML=`<div class="box gate"><img class="em" src="${EM}" alt="CyberHayde emblem"><h2>${title}</h2><p class="hint"><small>${note}</small></p><form id="f" autocomplete="on">${body}<p class="err" id="err" role="alert"></p></form>${alt?`<p class="alt"><small>${alt}</small></p>`:''}<p class="ver"><small>Version ${esc(BUILD)}</small></p></div>`;}
 const field=(id,label,type,extra)=>`<label for="${id}">${label}</label><input id="${id}" type="${type||'text'}" ${extra||''}>`;
 const FIX='autocapitalize="none" autocorrect="off" spellcheck="false"';
 function setErr(m){const e=$('#err');if(e)e.textContent=m||'';}
-function enter(){signedIn=true;$('#lockBtn').hidden=false;$('#acctBtn').hidden=false;bump();list();}
+function enter(){signedIn=true;$('#lockBtn').hidden=false;$('#acctBtn').hidden=false;bump();lastSave=Date.now();saveSession();list();}
+const needNew=(u,p,p2)=>{if(u.length<3)throw new Error('Pick a username of at least 3 characters.');if(p.length<10)throw new Error('Use at least 10 characters for the password.');if(p!==p2)throw new Error('The two passwords do not match.');};
+function keepLocal(blob,ver,user){localStorage.setItem('vault',blob);localStorage.setItem('syncver',ver);if(user){USER=user;localStorage.setItem('cu',user);}}
+
 async function startScreen(){
+ if(await restoreSession())return;
  if(!SYNC){shell('Connect this console','One-time step on this device.',field('su','Console Sync address','url','placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off"')+'<div class="actions"><button class="go" id="go" type="submit">Save</button></div>','Tip: paste the address once into the SYNC_URL line at the top of this file and no device will ever ask again.');
   $('#f').onsubmit=e=>{e.preventDefault();const u=$('#su').value.trim();if(!/^https:\/\/script\.google\.com\//.test(u))return setErr('That does not look like a Google Apps Script address.');localStorage.setItem('sync',u);location.reload();};return;}
- shell('One moment...','Checking the sync service.','<div class="actions"><button class="ghost" id="retry" type="button" hidden>Try again</button></div>');
+ shell('One moment...','Checking the sync service.','');
  let st=null;try{st=await rpc('status',{},SYNC);}catch(e){}
- if(!st){if(localStorage.getItem('vault'))return signInScreen(true);shell('Cannot reach the sync service','Check your internet connection and the sync address.','<div class="actions"><button class="go" id="go" type="submit">Try again</button></div>');$('#f').onsubmit=e=>{e.preventDefault();startScreen();};return;}
+ if(!st){if(localStorage.getItem('vault')&&isV4(localStorage.getItem('vault')))return signInScreen(true);shell('Cannot reach the sync service','Check your internet connection and the sync address.','<div class="actions"><button class="go" id="go" type="submit">Try again</button></div>');$('#f').onsubmit=e=>{e.preventDefault();startScreen();};return;}
  st.data.initialised?signInScreen(false):createScreen();}
 function signInScreen(offline){
  shell('Sign in',offline?'You are offline. This device can open your last saved copy.':'Use the same username and password on any device.',
   field('u','Username','text',`autocomplete="username" ${FIX} value="${esc(localStorage.getItem('cu')||'')}"`)+field('p','Password','password','autocomplete="current-password"')+'<div class="actions"><button class="go" id="go" type="submit">Sign in</button></div>',
-  'Used the console before with only a passcode? <a href="#" id="up">Upgrade it to a username</a>');
- $('#up').onclick=e=>{e.preventDefault();upgradeScreen();};
+  '<a href="#" id="fg">Forgot your password?</a> &nbsp;&middot;&nbsp; <a href="#" id="up">Old passcode-only console?</a>');
+ $('#up').onclick=e=>{e.preventDefault();upgradeScreen();};$('#fg').onclick=e=>{e.preventDefault();forgotScreen();};
  $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Signing in...',async()=>{try{await signIn($('#u').value,$('#p').value);}catch(x){setErr(x.message);}});};
  ($('#u').value?$('#p'):$('#u')).focus();}
 async function signIn(user,pass){
  if(!user.trim()||!pass)throw new Error('Enter your username and password.');
- const secret=secretOf(user,pass);AUTH=await authOf(secret);let blob,offline=false;
+ const secret=secretOf(user,pass);AUTH=await authPw(secret);let blob,offline=false;
  try{const j=await rpc('get');blob=j.data.blob;VER=j.data.version;}
  catch(e){if(e.code)throw new Error(e.code==='LOCKED'?e.message:'Wrong username or password.');
-  blob=localStorage.getItem('vault');if(!blob)throw new Error('No connection, and nothing saved on this device yet.');offline=true;}
- let o;try{o=await openBlob(blob,secret);}catch(e){throw new Error('Wrong username or password.');}
- SALT=o.salt;K=o.key;clients=o.clients;removed=o.removed;USER=user.trim();localStorage.setItem('cu',USER);localStorage.setItem('vault',blob);localStorage.setItem('syncver',VER);
- enter();setSync(offline?"Offline. Using this device's copy.":'Synced',offline);if(offline)setTimeout(()=>pull(),15000);}
+  blob=localStorage.getItem('vault');if(!blob||!isV4(blob))throw new Error('No connection, and nothing saved on this device yet.');offline=true;}
+ if(isV4(blob)){let o;try{o=await openV4(blob,secret);}catch(e){throw new Error('Wrong username or password.');}
+  clients=o.clients;removed=o.removed;keepLocal(blob,VER,user.trim());enter();setSync(offline?"Offline. Using this device's copy.":'Synced',offline);if(offline)setTimeout(()=>pull(),15000);
+  if(!WR.rec&&!offline)toast('Tip: open Account and create a recovery key.');return;}
+ let o;try{o=await openLegacy(blob,secret);}catch(e){throw new Error('Wrong username or password.');}
+ clients=o.clients;removed=o.removed;const cur=AUTH;                                           // an account made before recovery keys existed
+ const rk=newRK();rkScreen(rk,'Add a recovery key','Your console now gets a recovery key, so a forgotten password is never the end. Save it before you continue.',async()=>{await commitRekey(user.trim(),pass,rk,cur);enter();toast('Recovery key saved.');});}
+async function commitRekey(u,p,rk,authCur){const secret=secretOf(u,p),raw=crypto.getRandomValues(new Uint8Array(32));K=await dkKey(raw);WR={pw:await wrapDK(raw,secret),rec:await wrapDK(raw,rk)};
+ const newAuth=await authPw(secret),newRauth=await authRec(rk),blob=await sealText(),j=await rpc('rekey',{auth:authCur,newAuth,newRauth,blob,expected:VER});
+ if(j.code==='CONFLICT')throw new Error('Changed on another device. Try again.');AUTH=newAuth;VER=j.data.version;keepLocal(blob,VER,u);}
+function rkScreen(rk,title,note,done){
+ shell(title,note,`<div class="rk" id="rk">${rkHtml(rk)}</div><div class="actions"><button type="button" class="ghost" id="rkc">Copy</button><button type="button" class="ghost" id="rkd">Download</button><button type="button" class="ghost" id="rkp">Print</button></div>
+  <label class="chk"><input type="checkbox" id="rks"> <span>I have saved my recovery key somewhere safe</span></label><div class="actions"><button class="go" id="go" type="submit" disabled>Continue</button></div>`,
+  'Anyone with this key can reset your password, so keep it private, like a password. It is shown only once.');
+ $('#rks').onchange=()=>{$('#go').disabled=!$('#rks').checked;};
+ $('#rkc').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(fmtRK(rk)).then(()=>toast('Copied')).catch(()=>toast('Select the key and copy it by hand.',true));};
+ $('#rkd').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([`CyberHayde console recovery key\n\n${fmtRK(rk)}\n\nCreated ${new Date().toLocaleString()}\nKeep this private. With it, anyone can reset your console password.\n`],{type:'text/plain'}));a.download='CyberHayde-recovery-key.txt';a.click();};
+ $('#rkp').onclick=()=>window.print();
+ $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Saving...',async()=>{try{await done();}catch(x){setErr(x.message);}});};}
 function createScreen(){
- shell('Create your console account','Choose a username and password. This is the only login for every device. There is no recovery, so keep it safe.',
-  field('u','Username','text',`autocomplete="username" ${FIX}`)+field('p','Password (10 or more characters)','password','autocomplete="new-password"')+field('p2','Repeat password','password','autocomplete="new-password"')+'<div class="actions"><button class="go" id="go" type="submit">Create and open</button></div>');
- $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Creating...',async()=>{try{const u=$('#u').value.trim(),p=$('#p').value;
-  if(u.length<3)throw new Error('Pick a username of at least 3 characters.');if(p.length<10)throw new Error('Use at least 10 characters for the password.');if(p!==$('#p2').value)throw new Error('The two passwords do not match.');
-  const secret=secretOf(u,p);SALT=crypto.getRandomValues(new Uint8Array(16));K=await aesKey(secret,SALT);clients=[];removed={};AUTH=await authOf(secret);
-  const blob=await sealText(),j=await rpc('init',{blob});VER=j.data.version;localStorage.setItem('vault',blob);localStorage.setItem('syncver',VER);localStorage.setItem('cu',u);USER=u;enter();setSync('Synced');toast('Account created. Sign in with the same details on any device.');}catch(x){setErr(x.message);}});};
+ shell('Create your console account','Choose a username and password. They work on every device. Next you will get a recovery key in case you ever forget the password.',
+  field('u','Username','text',`autocomplete="username" ${FIX}`)+field('p','Password (10 or more characters)','password','autocomplete="new-password"')+field('p2','Repeat password','password','autocomplete="new-password"')+'<div class="actions"><button class="go" id="go" type="submit">Continue</button></div>');
+ $('#f').onsubmit=e=>{e.preventDefault();try{const u=$('#u').value.trim(),p=$('#p').value;needNew(u,p,$('#p2').value);const rk=newRK();
+  rkScreen(rk,'Save your recovery key','If you forget your password, this key is the only way back in. Write it down or save it now.',async()=>{
+   const secret=secretOf(u,p),raw=crypto.getRandomValues(new Uint8Array(32));K=await dkKey(raw);WR={pw:await wrapDK(raw,secret),rec:await wrapDK(raw,rk)};clients=[];removed={};AUTH=await authPw(secret);
+   const blob=await sealText(),j=await rpc('init',{blob,rauth:await authRec(rk)});VER=j.data.version;keepLocal(blob,VER,u);enter();setSync('Synced');toast('Account created. Sign in with the same details on any device.');});}catch(x){setErr(x.message);}};
  $('#u').focus();}
+function forgotScreen(){
+ shell('Reset your password','Enter your recovery key, then choose a new username and password. Your clients are kept.',
+  field('rk','Recovery key','text',`autocomplete="off" ${FIX} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"`)+field('u','New username','text',`autocomplete="username" ${FIX} value="${esc(localStorage.getItem('cu')||'')}"`)+field('p','New password (10 or more characters)','password','autocomplete="new-password"')+field('p2','Repeat new password','password','autocomplete="new-password"')+'<div class="actions"><button class="go" id="go" type="submit">Continue</button><button class="ghost" id="bk" type="button">Back</button></div>',
+  'No recovery key either? Nothing can open the data, by design. See the note on starting fresh in the setup guide.');
+ $('#bk').onclick=()=>signInScreen(false);
+ $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Checking...',async()=>{try{const rk=normRK($('#rk').value),u=$('#u').value.trim(),p=$('#p').value;
+  if(rk.length!==24)throw new Error('The recovery key has 24 letters and numbers. Check it and try again.');needNew(u,p,$('#p2').value);
+  const rauth=await authRec(rk);AUTH='';let j;try{j=await rpc('recoverGet',{rauth});}catch(x){throw new Error(x.code==='LOCKED'?x.message:'That recovery key is not right.');}
+  if(!isV4(j.data.blob)||!JSON.parse(j.data.blob).rec)throw new Error('This console has no recovery key yet.');
+  let raw;try{raw=await unwrapDK(JSON.parse(j.data.blob).rec,rk);}catch(x){throw new Error('That recovery key is not right.');}
+  K=await dkKey(raw);const o=await readV4(j.data.blob,K);clients=o.clients;removed=o.removed;VER=j.data.version;const nrk=newRK();
+  rkScreen(nrk,'Save your NEW recovery key','Your password is reset. The old recovery key no longer works, so save this new one now.',async()=>{
+   const secret=secretOf(u,p);WR={pw:await wrapDK(raw,secret),rec:await wrapDK(raw,nrk)};const newAuth=await authPw(secret),newRauth=await authRec(nrk),blob=await sealText();
+   const r2=await rpc('recover',{rauth,newAuth,newRauth,blob,expected:VER});if(r2.code==='CONFLICT')throw new Error('Changed on another device. Try again.');
+   AUTH=newAuth;VER=r2.data.version;keepLocal(blob,VER,u);enter();toast('Password reset. You are signed in.');});}catch(x){setErr(x.message);}});};
+ $('#rk').focus();}
 function upgradeScreen(){
  shell('Upgrade your console','Your clients are kept. Enter your old passcode, then choose the username and password to use from now on.',
-  field('op','Old passcode','password','autocomplete="off"')+field('u','New username','text',`autocomplete="username" ${FIX}`)+field('p','New password (10 or more characters)','password','autocomplete="new-password"')+field('p2','Repeat new password','password','autocomplete="new-password"')+'<div class="actions"><button class="go" id="go" type="submit">Upgrade</button><button class="ghost" id="bk" type="button">Back</button></div>');
+  field('op','Old passcode','password','autocomplete="off"')+field('u','New username','text',`autocomplete="username" ${FIX}`)+field('p','New password (10 or more characters)','password','autocomplete="new-password"')+field('p2','Repeat new password','password','autocomplete="new-password"')+'<div class="actions"><button class="go" id="go" type="submit">Continue</button><button class="ghost" id="bk" type="button">Back</button></div>');
  $('#bk').onclick=()=>signInScreen(false);
- $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Upgrading...',async()=>{try{const op=$('#op').value,u=$('#u').value.trim(),p=$('#p').value;
-  if(!op)throw new Error('Enter your old passcode.');if(u.length<3)throw new Error('Pick a username of at least 3 characters.');if(p.length<10)throw new Error('Use at least 10 characters for the password.');if(p!==$('#p2').value)throw new Error('The two passwords do not match.');
-  AUTH=await authOf(op,true);let j;try{j=await rpc('get');}catch(x){throw new Error(x.code==='LOCKED'?x.message:'That old passcode is not right.');}
-  let o;try{o=await openBlob(j.data.blob,op);}catch(x){throw new Error('That old passcode is not right.');}
-  clients=o.clients;removed=o.removed;VER=j.data.version;await rekeyTo(u,p);USER=u;localStorage.setItem('cu',u);enter();toast('Upgraded. Sign in with your username on any device.');}catch(x){setErr(x.message);}});};}
-async function rekeyTo(u,p){const secret=secretOf(u,p),newAuth=await authOf(secret);SALT=crypto.getRandomValues(new Uint8Array(16));K=await aesKey(secret,SALT);const blob=await sealText();
- const j=await rpc('rekey',{newAuth,blob,expected:VER});if(j.code==='CONFLICT')throw new Error('Changed on another device. Try again.');
- AUTH=newAuth;VER=j.data.version;localStorage.setItem('vault',blob);localStorage.setItem('syncver',VER);}
+ $('#f').onsubmit=e=>{e.preventDefault();busy('#go','Checking...',async()=>{try{const op=$('#op').value,u=$('#u').value.trim(),p=$('#p').value;
+  if(!op)throw new Error('Enter your old passcode.');needNew(u,p,$('#p2').value);
+  AUTH=await authLegacy(op);const cur=AUTH;let j;try{j=await rpc('get');}catch(x){throw new Error(x.code==='LOCKED'?x.message:'That old passcode is not right.');}
+  let o;try{o=await openLegacy(j.data.blob,op);}catch(x){throw new Error('That old passcode is not right.');}
+  clients=o.clients;removed=o.removed;VER=j.data.version;const rk=newRK();
+  rkScreen(rk,'Save your recovery key','Your console is upgraded after this step. Save the recovery key so a forgotten password is never the end.',async()=>{await commitRekey(u,p,rk,cur);enter();toast('Upgraded. Sign in with your username on any device.');});}catch(x){setErr(x.message);}});};}
+async function verifyPw(cp){const s=secretOf(USER,cp);if(await authPw(s)!==AUTH)throw new Error('Your current password is not right.');return s;}
+async function saveRekey(newAuth,newRauth){const blob=await sealText(),j=await rpc('rekey',{newAuth,newRauth,blob,expected:VER});if(j.code==='CONFLICT')throw new Error('Changed on another device. Try again.');AUTH=newAuth;VER=j.data.version;keepLocal(blob,VER);await saveSession();}
 function accountSheet(){
- const d=document.createElement('div');d.className='sheet';d.innerHTML=`<div class="box"><h3 style="margin-top:0">Account</h3><p><small>Signed in as <b>${esc(USER)}</b>. Changing these signs out your other devices the next time they sync.</small></p>
-  <form id="af" autocomplete="off">${field('cp','Current password','password','autocomplete="current-password"')}${field('nu','New username','text',`value="${esc(USER)}" autocomplete="username" ${FIX}`)}${field('np','New password (leave empty to keep)','password','autocomplete="new-password"')}
-  <p class="err" id="aerr" role="alert"></p><div class="actions"><button class="go" id="asv" type="submit">Save</button><button class="ghost" id="acl" type="button">Close</button></div></form></div>`;
+ const link=SYNC_URL?location.origin+location.pathname:location.origin+location.pathname+'#s='+encodeURIComponent(SYNC);
+ const d=document.createElement('div');d.className='sheet';d.innerHTML=`<div class="box"><h3 style="margin-top:0">Account</h3><p><small>Signed in as <b>${esc(USER)}</b>. Console version ${esc(BUILD)}.</small></p>
+  <form id="af" autocomplete="off"><h4>Change username or password</h4>${field('cp','Current password','password','autocomplete="current-password"')}${field('nu','New username','text',`value="${esc(USER)}" autocomplete="username" ${FIX}`)}${field('np','New password (leave empty to keep)','password','autocomplete="new-password"')}
+  <p class="err" id="aerr" role="alert"></p><div class="actions"><button class="go" id="asv" type="submit">Save</button></div></form>
+  <h4>Recovery key</h4><p><small>${WR.rec?'A recovery key is set. Make a new one if you lost it or think someone saw it.':'No recovery key yet. Make one now.'}</small></p><div class="actions"><button class="ghost" id="rkn">Make a new recovery key</button></div>
+  <h4>Use on another device</h4><p><small>Open this link on the other device, then sign in with your username and password. The address is not secret by itself.</small></p><input id="lnk" readonly value="${esc(link)}" onfocus="this.select()"><div class="actions"><button class="ghost" id="lcp">Copy link</button></div>
+  <h4>Updates</h4><div class="actions"><button class="ghost" id="upd">Check for updates now</button></div>
+  <div class="actions" style="margin-top:16px"><button class="ghost" id="acl" type="button">Close</button></div></div>`;
  document.body.append(d);d.onclick=e=>{if(e.target===d)d.remove();};$('#acl').onclick=()=>d.remove();
- $('#af').onsubmit=e=>{e.preventDefault();busy('#asv','Saving...',async()=>{const er=$('#aerr');er.textContent='';try{
-  if(await authOf(secretOf(USER,$('#cp').value))!==AUTH)throw new Error('Your current password is not right.');
-  const u=$('#nu').value.trim(),p=$('#np').value||$('#cp').value;if(u.length<3)throw new Error('Pick a username of at least 3 characters.');if(p.length<10)throw new Error('The password needs at least 10 characters.');
-  await rekeyTo(u,p);USER=u;localStorage.setItem('cu',u);d.remove();toast('Account updated');}catch(x){er.textContent=x.message;}});};}
+ $('#lcp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText($('#lnk').value).then(()=>toast('Link copied')).catch(()=>{$('#lnk').select();});};
+ $('#upd').onclick=()=>checkUpdate(true);
+ $('#af').onsubmit=e=>{e.preventDefault();busy('#asv','Saving...',async()=>{const er=$('#aerr');er.textContent='';try{const secret=await verifyPw($('#cp').value),u=$('#nu').value.trim(),p=$('#np').value||$('#cp').value;
+  if(u.length<3)throw new Error('Pick a username of at least 3 characters.');if(p.length<10)throw new Error('The password needs at least 10 characters.');
+  const raw=await unwrapDK(WR.pw,secret),ns=secretOf(u,p);WR.pw=await wrapDK(raw,ns);await saveRekey(await authPw(ns),null);USER=u;localStorage.setItem('cu',u);await saveSession();d.remove();toast('Account updated');}catch(x){er.textContent=x.message;}});};
+ $('#rkn').onclick=()=>{const pw=prompt('Type your current password to make a new recovery key:');if(!pw)return;run(async()=>{const secret=await verifyPw(pw),raw=await unwrapDK(WR.pw,secret),rk=newRK();WR.rec=await wrapDK(raw,rk);await saveRekey(AUTH,await authRec(rk));d.remove();rkSheet(rk);});};}
+function rkSheet(rk){const d=document.createElement('div');d.className='sheet';d.innerHTML=`<div class="box"><h3 style="margin-top:0">Your new recovery key</h3><div class="rk">${rkHtml(rk)}</div><p><small>Save it now. It is shown only once, and the old key no longer works.</small></p><div class="actions"><button class="ghost" id="c1">Copy</button><button class="ghost" id="c2">Download</button><button class="go" id="c3">I have saved it</button></div></div>`;
+ document.body.append(d);$('#c1').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(fmtRK(rk)).then(()=>toast('Copied'));};
+ $('#c2').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([`CyberHayde console recovery key\n\n${fmtRK(rk)}\n\nCreated ${new Date().toLocaleString()}\n`],{type:'text/plain'}));a.download='CyberHayde-recovery-key.txt';a.click();};$('#c3').onclick=()=>d.remove();}
 
 /* ---- Screens ---- */
 async function list(){cur=null;
