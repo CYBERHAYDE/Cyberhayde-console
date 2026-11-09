@@ -3,7 +3,7 @@
      the next time the page opens. If the network is slow or off, the last copy it saw is used instead, so the console still opens.
    - It only touches files from the same site as the console. Calls to Google (sync, your clients) pass straight through.
    - To release a change to THIS file, change the number on the next line. */
-const SW_VERSION = '1';
+const SW_VERSION = '2';
 const CACHE = 'chconsole-sw-' + SW_VERSION;
 
 self.addEventListener('install', function () { self.skipWaiting(); });
