@@ -210,6 +210,12 @@ async function checkUpdate(manual){if(updating||location.protocol==='file:')retu
   sessionStorage.removeItem('upd');if(manual)toast('You already have the newest version.');return false;}
  catch(e){if(manual)toast('Could not check for updates right now.',true);return false;}}
 setInterval(()=>{if(!document.hidden)checkUpdate();},60*1000);
+/* The service worker (console-sw.js) makes every page load ask the host for the newest copy, and lets the console open offline. */
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+ let had=!!navigator.serviceWorker.controller;
+ navigator.serviceWorker.register('console-sw.js',{scope:location.pathname,updateViaCache:'none'}).then(reg=>{
+  reg.update();setInterval(()=>reg.update(),60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)reg.update();});}).catch(()=>{});
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!had){had=true;return;}if(updating)return;updating=true;saveSession().then(()=>location.reload());});}
 
 /* ---- Talking to a client's backend ---- */
 let pend=0;
